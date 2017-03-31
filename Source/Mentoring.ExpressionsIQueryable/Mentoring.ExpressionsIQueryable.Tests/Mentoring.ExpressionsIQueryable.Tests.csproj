@@ -51,9 +51,9 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ExpressionTransform\ExpressionTransformTest.cs" />
-    <Compile Include="ExpressionTransform\ClassMapperTest.cs" />
-    <Compile Include="ExpressionTransform\TestClasses\Bar.cs" />
-    <Compile Include="ExpressionTransform\TestClasses\Foo.cs" />
+    <Compile Include="ClassMapper\ClassMapperTest.cs" />
+    <Compile Include="ClassMapper\TestClasses\Bar.cs" />
+    <Compile Include="ClassMapper\TestClasses\Foo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
