@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Mentoring.ExpressionsIQueryable.ExpressionTransform")]
+[assembly: AssemblyTitle("Mentoring.ExpressionsIQueryable.Tests")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("EPAM Systems")]
-[assembly: AssemblyProduct("Mentoring.ExpressionsIQueryable.ExpressionTransform")]
+[assembly: AssemblyProduct("Mentoring.ExpressionsIQueryable.Tests")]
 [assembly: AssemblyCopyright("Copyright © EPAM Systems 2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("c572a044-84cf-4e14-bb50-40d9c6115562")]
+[assembly: Guid("38ee2001-1e71-4813-9b39-bcd553de8a52")]
 
 // Version information for an assembly consists of the following four values:
 //
