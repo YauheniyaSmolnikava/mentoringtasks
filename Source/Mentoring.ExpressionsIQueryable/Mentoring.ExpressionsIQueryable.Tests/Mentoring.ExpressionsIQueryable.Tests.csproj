@@ -51,14 +51,22 @@
   </Choose>
   <ItemGroup>
     <Compile Include="ExpressionTransform\ExpressionTransformTest.cs" />
+    <Compile Include="ExpressionTransform\ClassMapperTest.cs" />
+    <Compile Include="ExpressionTransform\TestClasses\Bar.cs" />
+    <Compile Include="ExpressionTransform\TestClasses\Foo.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Mentoring.ExpressionsIQueryable.ClassMapper\Mentoring.ExpressionsIQueryable.ClassMapper.csproj">
+      <Project>{32973d77-ffe2-42b4-89c7-abb7b66e2e51}</Project>
+      <Name>Mentoring.ExpressionsIQueryable.ClassMapper</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Mentoring.ExpressionsIQueryable.ExpressionTransform\Mentoring.ExpressionsIQueryable.ExpressionTransform.csproj">
       <Project>{012b9411-40f4-49d6-8cce-0a766f40627c}</Project>
       <Name>Mentoring.ExpressionsIQueryable.ExpressionTransform</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Choose>
     <When Condition="'$(VisualStudioVersion)' == '10.0' And '$(IsCodedUITest)' == 'True'">
       <ItemGroup>
