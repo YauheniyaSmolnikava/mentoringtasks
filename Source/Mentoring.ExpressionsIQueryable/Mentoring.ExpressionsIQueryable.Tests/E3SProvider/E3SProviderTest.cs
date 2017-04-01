@@ -37,7 +37,7 @@ namespace Mentoring.ExpressionsIQueryable.Tests.E3SProvider
         [TestMethod]
         public void WithProvider()
         {
-            var employees = new E3SEntitySet<EmployeeEntity>(ConfigurationManager.AppSettings["user"], ConfigurationManager.AppSettings["password"]);
+            var employees = new E3SLinqProvider.E3SEntitySet<EmployeeEntity>(ConfigurationManager.AppSettings["user"], ConfigurationManager.AppSettings["password"]);
 
             foreach (var emp in employees.Where(e => e.workstation == "EPRUIZHW0249" && e.nativename.Contains("Михаил")))
             {

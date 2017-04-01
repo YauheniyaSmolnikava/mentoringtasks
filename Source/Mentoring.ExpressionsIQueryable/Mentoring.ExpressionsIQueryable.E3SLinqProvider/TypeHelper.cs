@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Mentoring.ExpressionsIQueryable.E3SLinqProvider
 {
-	public static class TypeHelper
+    static class TypeHelper
 	{
 		internal static Type GetElementType(Type seqType)
 		{
