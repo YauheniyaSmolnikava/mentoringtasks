@@ -1,0 +1,51 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema 
+  attributeFormDefault="unqualified" 
+  elementFormDefault="qualified" 
+  targetNamespace="http://library.by/catalog" 
+  xmlns:xs="http://www.w3.org/2001/XMLSchema"
+  xmlns="http://library.by/catalog">
+  <xs:element name="catalog">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" name="book" type="book_properties"/>
+      </xs:sequence>
+    </xs:complexType>
+    <xs:unique name="unique_id" xmlns:ts="http://library.by/catalog">
+      <xs:selector xpath="ts:book"/>
+      <xs:field xpath="@id"/>
+    </xs:unique>
+  </xs:element>
+  <xs:complexType name="book_properties">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="isbn" type="isbn_restriction"/>
+      <xs:element name="author" type="xs:string" />
+      <xs:element name="title" type="xs:string" />
+      <xs:element name="genre" type="genre_list" />
+      <xs:element name="publisher" type="xs:string" />
+      <xs:element name="publish_date" type="date_restriction" />
+      <xs:element name="description" type="xs:string" />
+      <xs:element name="registration_date" type="date_restriction" />
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:string" use="required" />
+  </xs:complexType>
+  <xs:simpleType name="isbn_restriction">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="^\d-\d{3}-\d{5}-\d$"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="genre_list">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="Computer"/>
+      <xs:enumeration value="Fantasy"/>
+      <xs:enumeration value="Romance"/>
+      <xs:enumeration value="Horror"/>
+      <xs:enumeration value="Science Fiction"/>
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:simpleType name="date_restriction">
+    <xs:restriction base="xs:date">
+      <xs:pattern value="^\d{4}-\d{2}-\d{2}$"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
