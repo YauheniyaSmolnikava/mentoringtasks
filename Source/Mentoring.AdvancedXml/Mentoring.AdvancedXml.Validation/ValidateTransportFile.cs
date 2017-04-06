@@ -7,7 +7,7 @@ namespace Mentoring.AdvancedXml.Validation
     public class ValidateTransportFile
     {
         XmlReaderSettings settings;
-        List<string> errors;
+        public List<string> errors;
 
         public ValidateTransportFile()
         {
@@ -22,13 +22,14 @@ namespace Mentoring.AdvancedXml.Validation
 
             settings.ValidationFlags = settings.ValidationFlags | XmlSchemaValidationFlags.ReportValidationWarnings;
             settings.ValidationType = ValidationType.Schema;
+   
         }
 
         public List<string> Validate(string filePath)
         {
             errors = new List<string>();
 
-            XmlReader reader = XmlReader.Create("CDCatalog1.xml", settings);
+            XmlReader reader = XmlReader.Create(filePath, settings);
 
             while (reader.Read()) ;
 
