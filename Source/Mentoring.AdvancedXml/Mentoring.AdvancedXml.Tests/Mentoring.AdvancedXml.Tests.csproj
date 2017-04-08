@@ -21,7 +21,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+    <OutputPath>.\</OutputPath>
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -46,17 +46,19 @@
     </When>
     <Otherwise>
       <ItemGroup>
-        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework" />
+        <Reference Include="Microsoft.VisualStudio.QualityTools.UnitTestFramework">
+          <Private>False</Private>
+        </Reference>
       </ItemGroup>
     </Otherwise>
   </Choose>
   <ItemGroup>
+    <Compile Include="ValidateHtmlTransformation.cs" />
+    <Compile Include="ValidateRssTransformation.cs" />
     <Compile Include="ValidateTransportFileTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="OutputFiles\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <Content Include="InputFiles\InvalidCatalog.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -64,8 +66,20 @@
     <Content Include="InputFiles\ValidCatalog.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
+    <Content Include="OutputFiles\Report.html" />
+    <Content Include="Transformations\HtmlTransformation.xslt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Mentoring.AdvancedXml.HtmlTransformation\Mentoring.AdvancedXml.HtmlTransformation.csproj">
+      <Project>{b08af96b-bf95-4b89-8d40-329ca0cfd673}</Project>
+      <Name>Mentoring.AdvancedXml.HtmlTransformation</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Mentoring.AdvancedXml.RSSTransformation\Mentoring.AdvancedXml.RSSTransformation.csproj">
+      <Project>{3ce7d8d6-bf5b-4567-b82b-0236a532913c}</Project>
+      <Name>Mentoring.AdvancedXml.RSSTransformation</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Mentoring.AdvancedXml.Validation\Mentoring.AdvancedXml.Validation.csproj">
       <Project>{a2991afb-3dec-473e-bf26-302f978c9867}</Project>
       <Name>Mentoring.AdvancedXml.Validation</Name>

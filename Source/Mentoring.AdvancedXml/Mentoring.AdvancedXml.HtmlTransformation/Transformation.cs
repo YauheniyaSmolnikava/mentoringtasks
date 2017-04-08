@@ -1,12 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Xml.Xsl;
+using System.IO;
+using System;
 
 namespace Mentoring.AdvancedXml.HtmlTransformation
 {
-    public class Transformation
+    public static class Transformation
     {
+        public static void GenerateReport(string inputfilePath, string xsltFilePath, string outputFilePath)
+        {
+            var xsl = new XslCompiledTransform();
+            xsl.Load(xsltFilePath);
+
+            using (StreamWriter file = new StreamWriter(outputFilePath))
+            {
+                xsl.Transform(inputfilePath, null, file);
+            }
+        }
     }
 }
