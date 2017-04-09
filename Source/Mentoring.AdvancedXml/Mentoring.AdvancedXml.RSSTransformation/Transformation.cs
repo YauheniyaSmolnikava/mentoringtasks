@@ -8,7 +8,7 @@ namespace Mentoring.AdvancedXml.RSSTransformation
         public static void XslCompiledTransform(string filePath)
         {
             var xsl = new XslCompiledTransform();
-            xsl.Load("RSSTransformation.xslt");
+            xsl.Load("RSSTransformation.xslt",new XsltSettings(false, true), null);
 
             xsl.Transform(filePath, null, Console.Out);
         }

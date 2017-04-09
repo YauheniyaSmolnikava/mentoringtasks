@@ -17,16 +17,16 @@
     </xs:unique>
   </xs:element>
   <xs:complexType name="book_properties">
-    <xs:sequence>
+    <xs:all>
       <xs:element minOccurs="0" name="isbn" type="isbn_restriction"/>
       <xs:element name="author" type="xs:string" />
       <xs:element name="title" type="xs:string" />
       <xs:element name="genre" type="genre_list" />
       <xs:element name="publisher" type="xs:string" />
-      <xs:element name="publish_date" type="date_restriction" />
+      <xs:element name="publish_date" type="xs:date" />
       <xs:element name="description" type="xs:string" />
-      <xs:element name="registration_date" type="date_restriction" />
-    </xs:sequence>
+      <xs:element name="registration_date" type="xs:date" />
+    </xs:all>
     <xs:attribute name="id" type="xs:string" use="required" />
   </xs:complexType>
   <xs:simpleType name="isbn_restriction">
@@ -41,11 +41,6 @@
       <xs:enumeration value="Romance"/>
       <xs:enumeration value="Horror"/>
       <xs:enumeration value="Science Fiction"/>
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:simpleType name="date_restriction">
-    <xs:restriction base="xs:date">
-      <xs:pattern value="^\d{4}-\d{2}-\d{2}$"/>
     </xs:restriction>
   </xs:simpleType>
 </xs:schema>
