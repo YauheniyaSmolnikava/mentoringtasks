@@ -9,7 +9,7 @@ namespace Mentoring.AdvancedXml.HtmlTransformation
         public static void GenerateReport(string inputfilePath, string xsltFilePath, string outputFilePath)
         {
             var xsl = new XslCompiledTransform();
-            xsl.Load(xsltFilePath);
+            xsl.Load(xsltFilePath, new XsltSettings(false, true), null);
 
             using (StreamWriter file = new StreamWriter(outputFilePath))
             {

@@ -4,48 +4,58 @@
                 xmlns:msxsl="urn:schemas-microsoft-com:xslt"
                 xmlns:ct="http://library.by/catalog"
                 exclude-result-prefixes="msxsl"
->
+                xmlns:local="urn:local" extension-element-prefixes="msxsl">
   <xsl:output method="html" indent="yes"/>
 
+  <msxsl:script language="CSharp" implements-prefix="local">
+    public string dateTimeNow()
+    {
+    return DateTime.Now.ToString("yyyy-MM-dd");
+    }
+  </msxsl:script>
+
   <xsl:template match="/">
-    <xsl:for-each select="ct:catalog/ct:book/ct:genre[not(.=preceding::*)]">
-      <xsl:apply-templates select="/ct:catalog">
-        <xsl:with-param name="genre" select="."/>
-      </xsl:apply-templates>
-    </xsl:for-each>
-    <h1>
-      Total: <xsl:value-of select="count(ct:catalog/ct:book)"/>
-    </h1>
+    <html>
+      <body>
+        <h1>Current funds <xsl:value-of select="local:dateTimeNow()"/></h1>
+        <xsl:for-each select="ct:catalog/ct:book/ct:genre[not(.=preceding::*)]">
+          <xsl:apply-templates select="/ct:catalog">
+            <xsl:with-param name="genre" select="."/>
+          </xsl:apply-templates>
+        </xsl:for-each>
+        <h1>
+          Total: <xsl:value-of select="count(ct:catalog/ct:book)"/>
+        </h1>
+      </body>
+    </html>
   </xsl:template>
 
   <xsl:template match="ct:catalog">
     <xsl:param name="genre"></xsl:param>
-    <html>
-      <h1>
-        Current funds by genre "<xsl:value-of select="$genre"/>"
-      </h1>
-      <table>
-        <thead>
-          <tr>
-            <th>Author</th>
-            <th>Title</th>
-            <th>Publishing Date</th>
-            <th>Registration Date</th>
-          </tr>
-        </thead>
-        <tbody>
-          <xsl:apply-templates select="ct:book[ct:genre=$genre]"/>
-        </tbody>
-        <tfoot>
-          <tr>
-            <th colspan="3">Total:</th>
-            <th>
-              <xsl:value-of select="count(ct:book[ct:genre=$genre])"/>
-            </th>
-          </tr>
-        </tfoot>
-      </table>
-    </html>
+    <h1>
+      Current funds by genre "<xsl:value-of select="$genre"/>"
+    </h1>
+    <table>
+      <thead>
+        <tr>
+          <th>Author</th>
+          <th>Title</th>
+          <th>Publishing Date</th>
+          <th>Registration Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <xsl:apply-templates select="ct:book[ct:genre=$genre]"/>
+      </tbody>
+      <tfoot>
+        <tr>
+          <th colspan="3">Total:</th>
+          <th>
+            <xsl:value-of select="count(ct:book[ct:genre=$genre])"/>
+          </th>
+        </tr>
+      </tfoot>
+    </table>
   </xsl:template>
 
   <xsl:template match="ct:book">
