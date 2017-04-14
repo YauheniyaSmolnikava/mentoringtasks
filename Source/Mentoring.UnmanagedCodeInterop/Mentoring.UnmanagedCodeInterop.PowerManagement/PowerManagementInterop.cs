@@ -67,6 +67,12 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
              int nOutputBufferSize
          );
 
+        [DllImport("powrprof.dll", SetLastError = true)]
+        private static extern uint SetSuspendState(
+            bool hibernate,
+            bool forceCritical,
+            bool disableWakeEvent);
+
         #endregion
 
         public static string GetLastSleepTime()
@@ -177,8 +183,8 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
             uint retval = CallNtPowerInformation(
                 informationLevel,
-                IntPtr.Zero,
-                0,
+                (IntPtr)hibernate,
+                IntPtr.Size,
                 out hibernate,
                 Marshal.SizeOf(typeof(byte)));
 
@@ -198,6 +204,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static void ForceHibernate()
         {
+            var x = SetSuspendState(true, true, false);
             return;
         }
 

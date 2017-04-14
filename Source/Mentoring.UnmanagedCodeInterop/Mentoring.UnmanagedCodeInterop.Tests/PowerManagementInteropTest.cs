@@ -49,5 +49,11 @@ namespace Mentoring.UnmanagedCodeInterop.Tests
              PowerManagementInterop.DeleteHibernationFile();
             //Console.WriteLine(lastWakeTime);
         }
+
+        [TestMethod]
+        public void TestForceHibernate()
+        {
+            PowerManagementInterop.ForceHibernate();
+        }
     }
 }
