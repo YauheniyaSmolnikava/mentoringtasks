@@ -41,6 +41,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IPowerManagement.cs" />
+    <Compile Include="PowerManagement.cs" />
     <Compile Include="PowerManagementInterop.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
