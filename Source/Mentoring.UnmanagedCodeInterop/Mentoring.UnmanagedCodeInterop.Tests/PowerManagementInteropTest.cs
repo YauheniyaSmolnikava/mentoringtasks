@@ -1,7 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Mentoring.UnmanagedCodeInterop.PowerManagement;
 using System;
-using System.Runtime.InteropServices;
 
 namespace Mentoring.UnmanagedCodeInterop.Tests
 {
@@ -25,8 +24,8 @@ namespace Mentoring.UnmanagedCodeInterop.Tests
         [TestMethod]
         public void TestGetSystemBatteryState()
         {
-            var lastWakeTime = PowerManagementInterop.GetSystemBatteryState();
-            Console.WriteLine(lastWakeTime);
+            var batteryInfo = PowerManagementInterop.GetSystemBatteryState();
+            Console.WriteLine(batteryInfo);
         }
 
         [TestMethod]
@@ -39,15 +38,15 @@ namespace Mentoring.UnmanagedCodeInterop.Tests
         [TestMethod]
         public void TestReserveHibernationFile()
         {
-            var lastWakeTime = PowerManagementInterop.ReserveHibernationFile();
-            Console.WriteLine(lastWakeTime);
+            var response = PowerManagementInterop.ReserveHibernationFile(true);
+            Console.WriteLine(response);
         }
 
         [TestMethod]
         public void TestDeleteHibernationFile()
         {
-             PowerManagementInterop.DeleteHibernationFile();
-            //Console.WriteLine(lastWakeTime);
+            var response = PowerManagementInterop.ReserveHibernationFile(false);
+            Console.WriteLine(response);
         }
 
         [TestMethod]

@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 {
@@ -32,14 +28,9 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
             return PowerManagementInterop.GetSystemPowerInformation();
         }
 
-        public string ReserveHibernationFile()
+        public string ReserveHibernationFile(bool reserve)
         {
-            return PowerManagementInterop.ReserveHibernationFile();
-        }
-
-        public void DeleteHibernationFile()
-        {
-            PowerManagementInterop.DeleteHibernationFile();
+            return PowerManagementInterop.ReserveHibernationFile(reserve);
         }
 
         public void ForceHibernate()

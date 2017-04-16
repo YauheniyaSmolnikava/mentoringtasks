@@ -15,14 +15,14 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
     public struct SYSTEM_BATTERY_STATE
     {
-        public byte AcOnLine;
-        public byte BatteryPresent;
-        public byte Charging;
-        public byte Discharging;
-        public byte spare1;
-        public byte spare2;
-        public byte spare3;
-        public byte spare4;
+        public bool AcOnLine;
+        public bool BatteryPresent;
+        public bool Charging;
+        public bool Discharging;
+        public bool spare1;
+        public bool spare2;
+        public bool spare3;
+        public bool spare4;
         public uint MaxCapacity;
         public uint RemainingCapacity;
         public uint Rate;
@@ -33,10 +33,14 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
     #endregion
 
-    public class PowerManagementInterop
+    internal class PowerManagementInterop
     {
+        #region Fields
+
         private static int informationLevel;
         const uint STATUS_SUCCESS = 0;
+
+        #endregion
 
         #region PowerManagement Functions
 
@@ -67,13 +71,15 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
              int nOutputBufferSize
          );
 
-        [DllImport("powrprof.dll", SetLastError = true)]
+        [DllImport("powrprof.dll")]
         private static extern uint SetSuspendState(
             bool hibernate,
             bool forceCritical,
             bool disableWakeEvent);
 
         #endregion
+
+        #region API Methods
 
         public static string GetLastSleepTime()
         {
@@ -128,7 +134,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
                 }
                 else
                 {
-                    return "Computer didn't go to sleep mode since last boot time";
+                    return "Computer didn't wake up after sleep since last boot time";
                 }
             }
 
@@ -150,7 +156,19 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
             if (retval == STATUS_SUCCESS)
             {
-                return String.Format("Is battery currently charging: {0}. Estimated time remaining on the battery: {1}", sbs.Charging == 1 ? "Yes" : "No", new TimeSpan(0, 0, (int)(sbs.EstimatedTime)));
+                if (sbs.BatteryPresent)
+                {
+                    if (sbs.AcOnLine)
+                    {
+                        return "Battery is currently charging";
+                    }
+                    else
+                    {
+                        return String.Format("Estimated time remaining on the battery: {0}", new TimeSpan(0, 0, (int)(sbs.EstimatedTime)));
+                    }
+                }
+
+                return "Computer is on the powerline";
             }
 
             return "Error occured";
@@ -161,7 +179,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
             informationLevel = 12;
             SYSTEM_POWER_INFORMATION spi;
 
-            uint retval = CallNtPowerInformation(
+            var retval = CallNtPowerInformation(
                 informationLevel,
                 IntPtr.Zero,
                 0,
@@ -176,37 +194,40 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
             return "Error occured";
         }
 
-        public static string ReserveHibernationFile()
+        public static string ReserveHibernationFile(bool reserve)
         {
             informationLevel = 10;
-            ulong hibernate = 0; 
+            ulong outputBuffer;
 
-            uint retval = CallNtPowerInformation(
+            int hiberParam = reserve ? 1 : 0;
+            var pointer = Marshal.AllocHGlobal(sizeof(int));
+            Marshal.WriteInt32(pointer, hiberParam);
+
+            ulong retval = CallNtPowerInformation(
                 informationLevel,
-                (IntPtr)hibernate,
-                IntPtr.Size,
-                out hibernate,
-                Marshal.SizeOf(typeof(byte)));
+                pointer,
+                Marshal.SizeOf(typeof(int)),
+                out outputBuffer,
+                Marshal.SizeOf(typeof(ulong)));
+
+            Marshal.FreeHGlobal(pointer);
 
             if (retval == STATUS_SUCCESS)
             {
-                return String.Empty;
+                return "Operation successfully completed";
             }
 
             return "Error occured";
         }
 
-        public static void DeleteHibernationFile()
-        {
-            informationLevel = 10;
-            return;
-        }
-
         public static void ForceHibernate()
         {
-            var x = SetSuspendState(true, true, false);
-            return;
+            SetSuspendState(true, true, false);
         }
+
+        #endregion
+
+        #region Private Methods
 
         private static DateTime GetLastBootTime()
         {
@@ -226,5 +247,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
             return bootTime;
         }
+
+        #endregion
     }
 }

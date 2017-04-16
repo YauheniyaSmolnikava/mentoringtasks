@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Runtime.InteropServices;
 
 namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 {
+    [ComVisible(true)]
+    [Guid("E3D713B4-2D10-4868-8CF6-ED694A501437")]
+    [InterfaceType(ComInterfaceType.InterfaceIsDual)]
     public interface IPowerManagement
     {
         string GetLastSleepTime();
@@ -16,9 +15,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         string GetSystemPowerInformation();
 
-        string ReserveHibernationFile();
-
-        void DeleteHibernationFile();
+        string ReserveHibernationFile(bool reserve);
 
         void ForceHibernate();
     }
