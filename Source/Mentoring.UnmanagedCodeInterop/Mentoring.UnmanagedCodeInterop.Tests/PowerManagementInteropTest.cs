@@ -31,8 +31,8 @@ namespace Mentoring.UnmanagedCodeInterop.Tests
         [TestMethod]
         public void TestGetSystemPowerInformation()
         {
-            var lastWakeTime = PowerManagementInterop.GetSystemPowerInformation();
-            Console.WriteLine(lastWakeTime);
+            var systemInfo = PowerManagementInterop.GetSystemPowerInformation();
+            Console.WriteLine(systemInfo);
         }
 
         [TestMethod]
