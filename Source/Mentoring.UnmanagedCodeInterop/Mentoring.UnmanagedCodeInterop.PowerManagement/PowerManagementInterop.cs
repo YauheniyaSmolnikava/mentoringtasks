@@ -72,6 +72,15 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
          );
 
         [DllImport("powrprof.dll")]
+        private static extern uint CallNtPowerInformation(
+             int InformationLevel,
+             IntPtr lpInputBuffer,
+             int nInputBufferSize,
+             IntPtr lpOutputBuffer,
+             int nOutputBufferSize
+         );
+
+        [DllImport("powrprof.dll")]
         private static extern uint SetSuspendState(
             bool hibernate,
             bool forceCritical,
@@ -197,7 +206,6 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
         public static string ReserveHibernationFile(bool reserve)
         {
             informationLevel = 10;
-            ulong outputBuffer;
 
             int hiberParam = reserve ? 1 : 0;
             var pointer = Marshal.AllocHGlobal(sizeof(int));
@@ -207,8 +215,8 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
                 informationLevel,
                 pointer,
                 Marshal.SizeOf(typeof(int)),
-                out outputBuffer,
-                Marshal.SizeOf(typeof(ulong)));
+                (IntPtr)null,
+                0);
 
             Marshal.FreeHGlobal(pointer);
 
