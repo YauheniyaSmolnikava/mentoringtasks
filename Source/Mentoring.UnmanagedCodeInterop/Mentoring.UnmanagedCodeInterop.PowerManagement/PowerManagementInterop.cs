@@ -7,10 +7,10 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
     #region Structures
     public struct SYSTEM_POWER_INFORMATION
     {
-        public ulong MaxIdlenessAllowed;
-        public ulong Idleness;
-        public ulong TimeRemaining;
-        public byte CoolingMode;
+        public UInt32 MaxIdlenessAllowed;
+        public UInt32 Idleness;
+        public UInt32 TimeRemaining;
+        public Char CoolingMode;
     }
 
     public struct SYSTEM_BATTERY_STATE
