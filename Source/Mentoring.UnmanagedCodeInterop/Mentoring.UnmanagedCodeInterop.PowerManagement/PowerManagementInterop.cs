@@ -37,39 +37,11 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
     {
         #region Fields
 
-        private static int informationLevel;
         const uint STATUS_SUCCESS = 0;
 
         #endregion
 
         #region PowerManagement Functions
-
-        [DllImport("powrprof.dll")]
-        private static extern uint CallNtPowerInformation(
-            int InformationLevel,
-            IntPtr lpInputBuffer,
-            int nInputBufferSize,
-            out SYSTEM_POWER_INFORMATION spi,
-            int nOutputBufferSize
-        );
-
-        [DllImport("powrprof.dll")]
-        private static extern uint CallNtPowerInformation(
-            int InformationLevel,
-            IntPtr lpInputBuffer,
-            int nInputBufferSize,
-            out SYSTEM_BATTERY_STATE sbs,
-            int nOutputBufferSize
-        );
-
-        [DllImport("powrprof.dll")]
-        private static extern uint CallNtPowerInformation(
-             int InformationLevel,
-             IntPtr lpInputBuffer,
-             int nInputBufferSize,
-             out ulong lpOutputBuffer,
-             int nOutputBufferSize
-         );
 
         [DllImport("powrprof.dll")]
         private static extern uint CallNtPowerInformation(
@@ -92,29 +64,16 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static string GetLastSleepTime()
         {
-            informationLevel = 15;
+            var informationLevel = 15;
             ulong lpOutputBuffer;
 
-            DateTime lastSleep = new DateTime();
-
-            uint retval = CallNtPowerInformation(
-                informationLevel,
-                IntPtr.Zero,
-                0,
-                out lpOutputBuffer,
-                Marshal.SizeOf(typeof(ulong)));
+            var retval = GetEventTime(informationLevel, out lpOutputBuffer);
 
             if (retval == STATUS_SUCCESS)
             {
-                if (lpOutputBuffer > 0)
-                {
-                    lastSleep = GetLastBootTime().AddSeconds(lpOutputBuffer / 10000000);
-                    return String.Format("Last time computer went to sleep mode was at: {0}", lastSleep);
-                }
-                else
-                {
-                    return "Computer didn't go to sleep mode since last boot time";
-                }
+                return lpOutputBuffer > 0
+                    ? String.Format("Last time computer went to sleep mode was at: {0}", GetLastBootTime().AddSeconds(lpOutputBuffer / 10000000))
+                    : "Computer didn't go to sleep mode since last boot time";
             }
 
             return "Error occured";
@@ -122,29 +81,16 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static string GetLastWakeTime()
         {
-            informationLevel = 14;
+            var informationLevel = 14;
             ulong lpOutputBuffer;
 
-            DateTime lastSleep = new DateTime();
-
-            uint retval = CallNtPowerInformation(
-                informationLevel,
-                IntPtr.Zero,
-                0,
-                out lpOutputBuffer,
-                Marshal.SizeOf(typeof(ulong)));
+            var retval = GetEventTime(informationLevel, out lpOutputBuffer);
 
             if (retval == STATUS_SUCCESS)
             {
-                if (lpOutputBuffer > 0)
-                {
-                    lastSleep = GetLastBootTime().AddSeconds(lpOutputBuffer / 10000000);
-                    return String.Format("Last time computer woke up was at: {0}", lastSleep);
-                }
-                else
-                {
-                    return "Computer didn't wake up after sleep since last boot time";
-                }
+                return lpOutputBuffer > 0
+                    ? String.Format("Last time computer woke up was at: {0}", GetLastBootTime().AddSeconds(lpOutputBuffer / 10000000))
+                    : "Computer didn't wake up after sleep since last boot time";
             }
 
             return "Error occured";
@@ -152,28 +98,31 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static string GetSystemBatteryState()
         {
-            informationLevel = 5;
+            var informationLevel = 5;
 
-            SYSTEM_BATTERY_STATE sbs;
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SYSTEM_BATTERY_STATE)));
 
             uint retval = CallNtPowerInformation(
                 informationLevel,
                 IntPtr.Zero,
                 0,
-                out sbs,
+                pointer,
                 Marshal.SizeOf(typeof(SYSTEM_BATTERY_STATE)));
+
+            var sbsResult = Marshal.PtrToStructure<SYSTEM_BATTERY_STATE>(pointer);
+            Marshal.FreeHGlobal(pointer);
 
             if (retval == STATUS_SUCCESS)
             {
-                if (sbs.BatteryPresent)
+                if (sbsResult.BatteryPresent)
                 {
-                    if (sbs.AcOnLine)
+                    if (sbsResult.AcOnLine)
                     {
                         return "Battery is currently charging";
                     }
                     else
                     {
-                        return String.Format("Estimated time remaining on the battery: {0}", new TimeSpan(0, 0, (int)(sbs.EstimatedTime)));
+                        return String.Format("Estimated time remaining on the battery: {0}", new TimeSpan(0, 0, (int)(sbsResult.EstimatedTime)));
                     }
                 }
 
@@ -185,19 +134,23 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static string GetSystemPowerInformation()
         {
-            informationLevel = 12;
-            SYSTEM_POWER_INFORMATION spi;
+            var informationLevel = 12;
+
+            var pointer = Marshal.AllocHGlobal(Marshal.SizeOf(typeof(SYSTEM_POWER_INFORMATION)));
 
             var retval = CallNtPowerInformation(
                 informationLevel,
                 IntPtr.Zero,
                 0,
-                out spi,
+                pointer,
                 Marshal.SizeOf(typeof(SYSTEM_POWER_INFORMATION)));
+
+            var spiResult = Marshal.PtrToStructure<SYSTEM_POWER_INFORMATION>(pointer);
+            Marshal.FreeHGlobal(pointer);
 
             if (retval == STATUS_SUCCESS)
             {
-                return String.Format("Idleness: {0}", spi.Idleness);
+                return String.Format("Idleness: {0}", spiResult.Idleness);
             }
 
             return "Error occured";
@@ -205,7 +158,7 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
 
         public static string ReserveHibernationFile(bool reserve)
         {
-            informationLevel = 10;
+            var informationLevel = 10;
 
             int hiberParam = reserve ? 1 : 0;
             var pointer = Marshal.AllocHGlobal(sizeof(int));
@@ -236,6 +189,23 @@ namespace Mentoring.UnmanagedCodeInterop.PowerManagement
         #endregion
 
         #region Private Methods
+
+        private static uint GetEventTime(int informationLevel, out ulong lpOutputBuffer)
+        {
+            var pointer = Marshal.AllocHGlobal(sizeof(ulong));
+
+            uint retval = CallNtPowerInformation(
+                informationLevel,
+                IntPtr.Zero,
+                0,
+                pointer,
+                Marshal.SizeOf(typeof(ulong)));
+
+            lpOutputBuffer = Marshal.PtrToStructure<ulong>(pointer);
+            Marshal.FreeHGlobal(pointer);
+
+            return retval;
+        }
 
         private static DateTime GetLastBootTime()
         {
