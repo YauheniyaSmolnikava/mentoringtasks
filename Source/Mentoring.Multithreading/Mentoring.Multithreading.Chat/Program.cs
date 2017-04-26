@@ -15,14 +15,10 @@ namespace Mentoring.Multithreading.Chat
             handler = new ConsoleEventDelegate(ConsoleEventCallback);
             SetConsoleCtrlHandler(handler, true);
 
-            System.Timers.Timer timer = new System.Timers.Timer(15000);
-            timer.Elapsed += HandleTimer;
-            timer.Start();
-
             try
             {
                 server = new ServerObject();
-                listenThread = new Thread(new ThreadStart(server.Listen));
+                listenThread = new Thread(server.Listen);
                 listenThread.Start();
             }
             catch (Exception ex)

@@ -64,6 +64,8 @@ namespace Mentoring.Multithreading.ChatClient
 
                         Thread.Sleep(random.Next(2000, 3000));
                         var messageToSend = Helper.Messages[random.Next(0, 9)];
+
+                        //check if in ReceiveMessage method message about server disconnecting was obtained
                         if (serverDisconnected)
                         {
                             break;
