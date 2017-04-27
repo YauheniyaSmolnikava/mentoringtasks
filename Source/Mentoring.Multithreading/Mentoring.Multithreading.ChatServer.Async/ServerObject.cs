@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading;
 using Mentoring.Multithreading.Utils;
 
-namespace Mentoring.Multithreading.Chat
+namespace Mentoring.Multithreading.ChatServer.Async
 {
     public class ServerObject
     {

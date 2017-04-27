@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Mentoring.Multithreading.ChatClient
+﻿namespace Mentoring.Multithreading.Utils
 {
-    public static class Helper
+    public static class SamplesHelper
     {
         public static string[] Messages = new string[10]
         { "Message1", "Message2", "Message3", "Message4", "Message5",

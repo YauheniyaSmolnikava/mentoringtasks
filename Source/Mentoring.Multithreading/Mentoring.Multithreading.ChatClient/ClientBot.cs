@@ -2,10 +2,11 @@
 using System.Threading;
 using System.Net.Sockets;
 using System.Text;
+using Mentoring.Multithreading.Utils;
 
 namespace Mentoring.Multithreading.ChatClient
 {
-    public class ClientSample
+    public class ClientBot
     {
         #region Fields
 
@@ -23,7 +24,7 @@ namespace Mentoring.Multithreading.ChatClient
 
         #region Constructors
 
-        public ClientSample(string hostVal, int portVal)
+        public ClientBot(string hostVal, int portVal)
         {
             host = hostVal;
             port = portVal;
@@ -44,7 +45,7 @@ namespace Mentoring.Multithreading.ChatClient
 
                     stream = client.GetStream();
 
-                    var clientName = Helper.ClientNames[random.Next(0, 9)];
+                    var clientName = SamplesHelper.ClientNames[random.Next(0, 9)];
                     string message = clientName;
 
                     //Sending message with client name
@@ -63,7 +64,7 @@ namespace Mentoring.Multithreading.ChatClient
                     {
 
                         Thread.Sleep(random.Next(2000, 3000));
-                        var messageToSend = Helper.Messages[random.Next(0, 9)];
+                        var messageToSend = SamplesHelper.Messages[random.Next(0, 9)];
 
                         //check if in ReceiveMessage method message about server disconnecting was obtained
                         if (serverDisconnected)

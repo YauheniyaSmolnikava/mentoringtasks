@@ -43,13 +43,18 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ClientSample.cs" />
-    <Compile Include="Helper.cs" />
+    <Compile Include="ClientBot.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Mentoring.Multithreading.Utils\Mentoring.Multithreading.Utils.csproj">
+      <Project>{1a9b58b8-bad9-415c-8c6e-9300bd8df48c}</Project>
+      <Name>Mentoring.Multithreading.Utils</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

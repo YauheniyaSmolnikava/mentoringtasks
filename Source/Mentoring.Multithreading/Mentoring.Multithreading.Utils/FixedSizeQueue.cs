@@ -1,7 +1,6 @@
 ﻿using System.Collections.Concurrent;
-using System.Linq;
 
-namespace Mentoring.Multithreading.Chat
+namespace Mentoring.Multithreading.Utils
 {
     public class FixedSizedQueue<T>
     {

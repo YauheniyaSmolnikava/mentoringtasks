@@ -7,6 +7,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mentoring.Multithreading.Ch
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mentoring.Multithreading.ChatClient", "Mentoring.Multithreading.ChatClient\Mentoring.Multithreading.ChatClient.csproj", "{973B9A53-5B8D-4C06-AA47-58D5640650A7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mentoring.Multithreading.Utils", "Mentoring.Multithreading.Utils\Mentoring.Multithreading.Utils.csproj", "{1A9B58B8-BAD9-415C-8C6E-9300BD8DF48C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mentoring.Multithreading.ChatClient.Async", "Mentoring.Multithreading.ChatClient.Async\Mentoring.Multithreading.ChatClient.Async.csproj", "{76EAA432-226A-460C-9938-B039C4588E1C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mentoring.Multithreading.ChatServer.Async", "Mentoring.Multithreading.ChatServer.Async\Mentoring.Multithreading.ChatServer.Async.csproj", "{95681CA2-EB15-4986-A333-AB3E1151D258}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +27,18 @@ Global
 		{973B9A53-5B8D-4C06-AA47-58D5640650A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{973B9A53-5B8D-4C06-AA47-58D5640650A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{973B9A53-5B8D-4C06-AA47-58D5640650A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A9B58B8-BAD9-415C-8C6E-9300BD8DF48C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A9B58B8-BAD9-415C-8C6E-9300BD8DF48C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A9B58B8-BAD9-415C-8C6E-9300BD8DF48C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A9B58B8-BAD9-415C-8C6E-9300BD8DF48C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76EAA432-226A-460C-9938-B039C4588E1C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76EAA432-226A-460C-9938-B039C4588E1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76EAA432-226A-460C-9938-B039C4588E1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76EAA432-226A-460C-9938-B039C4588E1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{95681CA2-EB15-4986-A333-AB3E1151D258}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{95681CA2-EB15-4986-A333-AB3E1151D258}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{95681CA2-EB15-4986-A333-AB3E1151D258}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{95681CA2-EB15-4986-A333-AB3E1151D258}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
