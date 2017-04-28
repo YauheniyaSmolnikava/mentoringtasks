@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 using System.Timers;
 
@@ -8,7 +8,6 @@ namespace Mentoring.Multithreading.ChatServer.Async
     class Program
     {
         static ServerObject server;
-        static Thread listenThread;
 
         static void Main(string[] args)
         {
@@ -18,8 +17,8 @@ namespace Mentoring.Multithreading.ChatServer.Async
             try
             {
                 server = new ServerObject();
-                listenThread = new Thread(server.Listen);
-                listenThread.Start();
+                var t = Task.Run(() => server.Listen());
+                t.Wait();
             }
             catch (Exception ex)
             {

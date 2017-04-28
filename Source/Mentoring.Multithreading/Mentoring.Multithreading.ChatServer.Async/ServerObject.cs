@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Net;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using Mentoring.Multithreading.Utils;
 
 namespace Mentoring.Multithreading.ChatServer.Async
@@ -16,6 +17,7 @@ namespace Mentoring.Multithreading.ChatServer.Async
         private static TcpListener tcpListener;
         private List<ClientObject> clients = new List<ClientObject>();
         public FixedSizedQueue<string> MessagesHistory = new FixedSizedQueue<string>(3);
+        private CancellationTokenSource cancellationToken = new CancellationTokenSource();
         private object lockObj = new object();
 
         #endregion
@@ -42,7 +44,7 @@ namespace Mentoring.Multithreading.ChatServer.Async
 
         #endregion
 
-        protected internal void Listen()
+        protected internal async void Listen()
         {
             try
             {
@@ -50,19 +52,24 @@ namespace Mentoring.Multithreading.ChatServer.Async
                 tcpListener.Start();
                 Console.WriteLine("Server has started. Waiting for new connections...");
 
-                while (true)
-                {
-                    TcpClient tcpClient = tcpListener.AcceptTcpClient();
-
-                    ClientObject clientObject = new ClientObject(tcpClient, this);
-                    Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
-                    clientThread.Start();
-                }
+                await AcceptClientsAsync();
             }
             catch (Exception ex)
             {
                 Console.WriteLine(ex.Message);
-                Disconnect();
+                Disconnect();   
+            }
+        }
+
+        protected async Task AcceptClientsAsync()
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync()
+                                                    .ConfigureAwait(false);
+                ClientObject clientObject = new ClientObject(tcpClient, this);
+                Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
+                clientThread.Start();
             }
         }
 
@@ -105,6 +112,7 @@ namespace Mentoring.Multithreading.ChatServer.Async
 
         protected internal void Disconnect()
         {
+            cancellationToken.Cancel();
             tcpListener.Stop();
 
             lock (lockObj)
@@ -116,8 +124,6 @@ namespace Mentoring.Multithreading.ChatServer.Async
                     RemoveConnection(clients[i].Id);
                 }
             }
-
-            // Environment.Exit(0);
         }
     }
 }

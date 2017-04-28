@@ -1,5 +1,5 @@
-﻿using System.Threading;
-using System;
+﻿using System;
+using System.Threading;
 
 namespace Mentoring.Multithreading.ChatClient
 {
@@ -16,12 +16,6 @@ namespace Mentoring.Multithreading.ChatClient
             thread1.Start();
 
             Console.ReadLine();
-
-            //var client2 = new ClientSample(host, port);
-            //client2.ProcessChatting();
-
-            //Thread thread2 = new Thread(new ThreadStart(client2.ProcessChatting));
-            //thread2.Start();
         }
     }
 }
