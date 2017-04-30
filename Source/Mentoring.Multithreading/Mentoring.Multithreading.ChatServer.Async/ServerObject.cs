@@ -68,8 +68,8 @@ namespace Mentoring.Multithreading.ChatServer.Async
                 TcpClient tcpClient = await tcpListener.AcceptTcpClientAsync()
                                                     .ConfigureAwait(false);
                 ClientObject clientObject = new ClientObject(tcpClient, this);
-                Thread clientThread = new Thread(new ThreadStart(clientObject.Process));
-                clientThread.Start();
+                Task clientTask = Task.Run(() => clientObject.Process());
+                clientTask.Wait();
             }
         }
 
@@ -77,16 +77,18 @@ namespace Mentoring.Multithreading.ChatServer.Async
 
         protected internal void BroadcastMessageHistory(ClientObject client)
         {
+            var broadcastedMessage = new StringBuilder();
             if (MessagesHistory.Queue.Count > 0)
             {
-                WriteMessageToStream(client, "\n ***** CHAT HISTORY ***** \n");
+                broadcastedMessage.Append("\n ***** CHAT HISTORY ***** \n");
 
                 foreach (var message in MessagesHistory.Queue)
                 {
-                    WriteMessageToStream(client, message);
+                    broadcastedMessage.Append(message);
                 }
 
-                WriteMessageToStream(client, " ***** \n");
+                broadcastedMessage.Append(" ***** \n");
+                WriteMessageToStream(client, broadcastedMessage.ToString());
             }
         }
 

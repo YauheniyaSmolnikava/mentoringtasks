@@ -3,6 +3,7 @@ using System.Threading;
 using System.Net.Sockets;
 using System.Text;
 using Mentoring.Multithreading.Utils;
+using System.IO;
 
 namespace Mentoring.Multithreading.ChatClient.Async
 {
@@ -17,8 +18,10 @@ namespace Mentoring.Multithreading.ChatClient.Async
 
         private TcpClient client;
         private NetworkStream stream;
+        private string clientName;
 
         private bool serverDisconnected = false;
+        private string fileReceivedMessageName = "ClientIncomeMessages.txt";
 
         #endregion
 
@@ -45,17 +48,16 @@ namespace Mentoring.Multithreading.ChatClient.Async
 
                     stream = client.GetStream();
 
-                    var clientName = SamplesHelper.ClientNames[random.Next(0, 9)];
+                    clientName = SamplesHelper.ClientNames[random.Next(0, 9)];
                     string message = clientName;
 
-                    //Sending message with client name
-                    SendMessage(message);
+                    //Sending the first message with client name
+                    BeginSendMessage(message);
 
                     //Receiving messages from Server in separate thread
-                    Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
-                    receiveThread.Start();
+                    BeginRead();
 
-                    Console.WriteLine("Welcome, {0}", clientName);
+                    Console.WriteLine("Welcome, {0}\n", clientName);
 
                     //How many messages send from this client
                     var msgToSendCount = random.Next(2, 7);
@@ -71,8 +73,8 @@ namespace Mentoring.Multithreading.ChatClient.Async
                         {
                             break;
                         }
-                        SendMessage(messageToSend + "\n");
-                        Console.WriteLine(clientName + ": " + messageToSend);
+                        BeginSendMessage(messageToSend + "\n");
+                        Console.WriteLine(clientName + ": " + messageToSend + "\n");
                     }
 
                 }
@@ -91,49 +93,58 @@ namespace Mentoring.Multithreading.ChatClient.Async
         #endregion
 
         #region Private Methods
-        private void SendMessage(string message)
+        public void BeginSendMessage(string message)
         {
-            byte[] data = Encoding.Unicode.GetBytes(message);
-            stream.Write(data, 0, data.Length);
+            var bytes = Encoding.Unicode.GetBytes(message);
+            stream.BeginWrite(bytes, 0, bytes.Length, EndSend, bytes);
         }
 
-        private void ReceiveMessage()
+        public void EndSend(IAsyncResult result)
         {
-            while (true)
+            var bytes = (byte[])result.AsyncState;
+        }
+
+        public void BeginRead()
+        {
+            var buffer = new byte[4096];
+            stream.BeginRead(buffer, 0, buffer.Length, EndRead, buffer);
+        }
+
+        public void EndRead(IAsyncResult result)
+        {
+            try
             {
-                try
+                var buffer = (byte[])result.AsyncState;
+                var bytesAvailable = stream.EndRead(result);
+
+                var message = Encoding.Unicode.GetString(buffer, 0, bytesAvailable);
+
+                if (!string.IsNullOrEmpty(message))
                 {
-                    byte[] data = new byte[64];
-                    StringBuilder builder = new StringBuilder();
-                    int bytes = 0;
-                    do
-                    {
-                        bytes = stream.Read(data, 0, data.Length);
-                        builder.Append(Encoding.Unicode.GetString(data, 0, bytes));
-                    }
-                    while (stream.DataAvailable);
+                    Console.WriteLine(message);
 
-                    string message = builder.ToString();
-
-                    if (!string.IsNullOrEmpty(message))
+                    using (StreamWriter sw = File.AppendText(@".//" + fileReceivedMessageName))
                     {
-                        Console.WriteLine(message);
-                    }
-
-                    if (message.Contains("Server message"))
-                    {
-                        serverDisconnected = true;
-                        Disconnect();
-                        break;
+                        sw.WriteLine("Received from Server: {0} : {1}", clientName, message);
                     }
                 }
-                catch
+
+                if (message.Contains("Server message"))
                 {
-                    Console.WriteLine("Disconnected");
-                    Console.ReadLine();
+                    serverDisconnected = true;
                     Disconnect();
-                    break;
                 }
+
+                if (!serverDisconnected)
+                {
+                    BeginRead();
+                }
+            }
+            catch
+            {
+                Console.WriteLine("Disconnected\n");
+                Console.ReadLine();
+                Disconnect();
             }
         }
 
