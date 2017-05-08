@@ -1,0 +1,1 @@
+..\bin\Debug\Mentoring.WindowsServices.ImagesMonitoringService.exe uninstall

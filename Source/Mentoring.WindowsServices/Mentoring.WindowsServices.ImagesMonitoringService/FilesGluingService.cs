@@ -9,10 +9,12 @@ using System.Collections.Generic;
 using System.Timers;
 using ZXing;
 using System.Drawing;
+using System.Diagnostics;
+using Topshelf;
 
 namespace Mentoring.WindowsServices.ImagesMonitoringService
 {
-    public class FilesGluingService
+    public class FilesGluingService : ServiceControl
     {
         #region Fields
 
@@ -30,20 +32,26 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         Section section;
         System.Timers.Timer timer;
 
+        //acceptable formats
         string[] extensions = new string[] { ".png", ".jpg", ".jpeg" };
+
+        //images that was written to document but not saved to pdf
         List<string> processedImages;
         List<int> processedImagesNumeration;
+        bool firstImage;
         BarcodeReader barcodeReader;
 
         #endregion
 
         #region Public Methods & Constructors
 
-        public FilesGluingService(string inDir, string outSuccessDir, string outFailedDir)
+        public FilesGluingService()
         {
-            this.inDir = inDir;
-            this.outSuccessDir = outSuccessDir;
-            this.outFailedDir = outFailedDir;
+            var curDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+
+            inDir = Path.Combine(curDir, "in");
+            outSuccessDir = Path.Combine(curDir, "successOut");
+            outFailedDir = Path.Combine(curDir, "failedOut");
 
             if (!Directory.Exists(inDir))
                 Directory.CreateDirectory(inDir);
@@ -54,7 +62,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             if (!Directory.Exists(outFailedDir))
                 Directory.CreateDirectory(outFailedDir);
 
-            workingThread = new Thread(WorkProc);
+            workingThread = new Thread(ImagesMonitoring);
             workStop = new ManualResetEvent(false);
             newFile = new AutoResetEvent(false);
 
@@ -68,23 +76,26 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             barcodeReader = new BarcodeReader { AutoRotate = true };
         }
 
-        public void Start()
+        public bool Start(HostControl hostControl)
         {
             workingThread.Start();
             watcher.EnableRaisingEvents = true;
+            return true;
         }
 
-        public void Stop()
+        public bool Stop(HostControl hostControl)
         {
             watcher.EnableRaisingEvents = false;
             workStop.Set();
             workingThread.Join();
+            return true;
         }
 
         #endregion
 
         #region Private Methods
-        private void WorkProc()
+
+        private void ImagesMonitoring()
         {
             do
             {
@@ -95,27 +106,46 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                     if (workStop.WaitOne(TimeSpan.Zero))
                         return;
 
-                    if (TryOpen(file, 3))
+                    //if file available write image to document
+                    if (FileHelper.TryOpen(file, 3))
                     {
                         WriteImageToDocument(file);
                     }
                 }
 
+                //timer for detecting if new document should be created
                 timer.Start();
             }
             while (WaitHandle.WaitAny(new WaitHandle[] { workStop, newFile }) != 0);
+
+            //saving all processed images before stopping service
             SaveImagesToPdfDocument();
+        }
+
+        private void CreateNewDocument()
+        {
+            //saving processed images before new document creating
+            SaveImagesToPdfDocument();
+            document = new Document();
+            section = document.AddSection();
+            processedImages = new List<string>();
+            processedImagesNumeration = new List<int>();
+            firstImage = true;
         }
 
         private void WriteImageToDocument(string file)
         {
+            //checing acceptable extensions
             if (extensions.Any(ex => ex == Path.GetExtension(file)))
             {
+                //check if this file was already written to document
                 if (!processedImages.Any(img => img == file))
                 {
-                    var imgNumber = GetImageNumeration(file);
+                    var imgNumber = FileHelper.GetImageNumeration(file);
 
-                    var checkBarcode = CheckBarCode(file);
+                    var checkBarcode = FileHelper.CheckBarCode(file, barcodeReader);
+
+                    //if numeration was broken or barcode was found - create new document
                     if ((processedImagesNumeration.Count() != 0 && processedImagesNumeration.Max() != (imgNumber - 1)) || checkBarcode)
                     {
                         CreateNewDocument();
@@ -123,6 +153,12 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
                     if (!checkBarcode)
                     {
+                        //add page break before adding new image to document
+                        if (!firstImage)
+                        {
+                            section.AddPageBreak();
+                        }
+
                         var img = section.AddImage(file);
 
                         img.RelativeHorizontal = RelativeHorizontal.Page;
@@ -137,47 +173,20 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                         processedImages.Add(file);
                         processedImagesNumeration.Add(imgNumber);
 
-                        section.AddPageBreak();
+                        firstImage = false;
                     }
                     else
                     {
+                        //delete image with barcode
                         File.Delete(Path.Combine(inDir, Path.GetFileName(file)));
                     }
                 }
             }
             else
             {
+                //moving file with wrong extension to specified folder
                 File.Move(file, Path.Combine(outFailedDir, Path.GetFileName(file)));
             }
-        }
-
-        private int GetImageNumeration(string file)
-        {
-            var fileName = Path.GetFileNameWithoutExtension(file);
-            var fileParts = fileName.Split(new[] { '_' });
-
-            if (fileParts.Count() > 1)
-            {
-                int imgNumber;
-                return int.TryParse(fileParts.Last(), out imgNumber) ? imgNumber : -1;
-            }
-
-            return -1;
-        }
-
-        private void OnTimedEvent(Object source, ElapsedEventArgs e)
-        {
-            SaveImagesToPdfDocument();
-            CreateNewDocument();
-        }
-
-        private void CreateNewDocument()
-        {
-            SaveImagesToPdfDocument();
-            document = new Document();
-            section = document.AddSection();
-            processedImages = new List<string>();
-            processedImagesNumeration = new List<int>();
         }
 
         private void SaveImagesToPdfDocument()
@@ -192,46 +201,21 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
                 foreach (var img in processedImages)
                 {
+                    //deleting processed files
                     File.Delete(Path.Combine(inDir, Path.GetFileName(img)));
                 }
             }
         }
 
+        private void OnTimedEvent(Object source, ElapsedEventArgs e)
+        {
+            //creating new document on timer event
+            CreateNewDocument();
+        }
+
         private void FileAppeared(object sender, FileSystemEventArgs e)
         {
             newFile.Set();
-        }
-
-        private bool TryOpen(string fullPath, int v)
-        {
-            for (int i = 0; i < v; i++)
-            {
-                try
-                {
-                    var file = File.Open(fullPath, FileMode.Open, FileAccess.Read, FileShare.None);
-                    file.Close();
-
-                    return true;
-                }
-                catch (IOException)
-                {
-                    Thread.Sleep(3000);
-                }
-            }
-
-            return false;
-        }
-
-        private bool CheckBarCode(string file)
-        {
-            Result result;
-
-            using (var bmp = (Bitmap)Bitmap.FromFile(file))
-            {
-                result = barcodeReader.Decode(bmp);
-            }
-
-            return result != null && result.BarcodeFormat == BarcodeFormat.CODE_128 && result.Text == "Document Breaker";
         }
 
         #endregion
