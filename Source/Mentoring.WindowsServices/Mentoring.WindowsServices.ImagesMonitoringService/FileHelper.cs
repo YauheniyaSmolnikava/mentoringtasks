@@ -44,14 +44,21 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
         public static bool CheckBarCode(string file, BarcodeReader barcodeReader)
         {
-            Result result;
-
-            using (var bmp = (Bitmap)Bitmap.FromFile(file))
+            try
             {
-                result = barcodeReader.Decode(bmp);
-            }
+                Result result;
 
-            return result != null && result.BarcodeFormat == BarcodeFormat.CODE_128 && result.Text == "Document Breaker";
+                using (var bmp = (Bitmap)Bitmap.FromFile(file))
+                {
+                    result = barcodeReader.Decode(bmp);
+                }
+
+                return result != null && result.BarcodeFormat == BarcodeFormat.CODE_128 && result.Text == "Document Breaker";
+            }
+            catch
+            {
+                return false;
+            }
         }
     }
 }

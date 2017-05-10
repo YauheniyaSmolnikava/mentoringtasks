@@ -185,7 +185,10 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             else
             {
                 //moving file with wrong extension to specified folder
-                File.Move(file, Path.Combine(outFailedDir, Path.GetFileName(file)));
+                if (FileHelper.TryOpen(file, 3))
+                {
+                    MoveOrDeleteFile(file);
+                }
             }
         }
 
@@ -193,16 +196,45 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         {
             if (processedImages != null && processedImages.Count() > 0)
             {
-                var render = new PdfDocumentRenderer();
-                render.Document = document;
+                try
+                {
+                    var render = new PdfDocumentRenderer();
+                    render.Document = document;
 
-                render.RenderDocument();
-                render.Save(Path.Combine(outSuccessDir, Guid.NewGuid() + ".pdf"));
+                    render.RenderDocument();
+                    render.Save(Path.Combine(outSuccessDir, Guid.NewGuid() + ".pdf"));
+                }
+                catch
+                {
+                    foreach (var file in processedImages)
+                    {
+                        //moving to failed folder
+                        MoveOrDeleteFile(file);
+                    }
+                }
 
                 foreach (var img in processedImages)
                 {
                     //deleting processed files
-                    File.Delete(Path.Combine(inDir, Path.GetFileName(img)));
+                    if (FileHelper.TryOpen(img, 3))
+                    {
+                        File.Delete(Path.Combine(inDir, Path.GetFileName(img)));
+                    }
+                }
+            }
+        }
+
+        private void MoveOrDeleteFile(string file) 
+        {
+            if (FileHelper.TryOpen(file, 3))
+            {
+                if (!File.Exists(Path.Combine(outFailedDir, Path.GetFileName(file))))
+                {
+                    File.Move(file, Path.Combine(outFailedDir, Path.GetFileName(file)));
+                }
+                else
+                {
+                    File.Delete(Path.Combine(inDir, Path.GetFileName(file)));
                 }
             }
         }
