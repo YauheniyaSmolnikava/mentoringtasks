@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading;
 using ZXing;
 
-namespace Mentoring.WindowsServices.ImagesMonitoringService
+namespace Mentoring.WindowsServices.Utils
 {
     public static class FileHelper
     {

@@ -7,11 +7,11 @@ using MigraDoc.DocumentObjectModel.Shapes;
 using System.Linq;
 using System.Collections.Generic;
 using System.Timers;
-using ZXing;
 using System.Diagnostics;
 using Topshelf;
 using Microsoft.ServiceBus.Messaging;
 using Mentoring.WindowsServices.Utils;
+using ZXing;
 
 namespace Mentoring.WindowsServices.ImagesMonitoringService
 {

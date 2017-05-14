@@ -13,6 +13,8 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 {
     public class QueueListener : ServiceControl
     {
+        #region Fields
+
         string outSuccessDir;
         Thread workingThread;
         Thread serviceStatusThread;
@@ -23,6 +25,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
         string queueName = "FileQueue";
         string topicName = "ServiceSettingsTopic";
         string subscriptonName = "ServiceStatusSubscription";
+        string subscriptionTopicName = "ServiceStatusTopic";
         string statusFileName = "CurrentServiceStatus.txt";
         string fileSettingsName = "Settings.txt";
 
@@ -32,6 +35,10 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
         QueueClient client;
         SubscriptionClient subscriptionClient;
         TopicClient topicClient;
+
+        #endregion
+
+        #region Public Methods and Constructors
 
         public QueueListener()
         {
@@ -56,11 +63,31 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 
             client = QueueClient.Create(queueName);
             topicClient = TopicClient.Create(topicName);
-            subscriptionClient = SubscriptionClient.Create("ServiceStatusTopic", subscriptonName);
+            subscriptionClient = SubscriptionClient.Create(subscriptionTopicName, subscriptonName);
 
             timer = new System.Timers.Timer(10000);
             timer.Elapsed += FileMonitoring;
         }
+
+        public bool Start(HostControl hostControl)
+        {
+            workingThread.Start();
+            serviceStatusThread.Start();
+            timer.Start();
+            return true;
+        }
+
+        public bool Stop(HostControl hostControl)
+        {
+            stop = true;
+            workingThread.Join();
+            serviceStatusThread.Join();
+            return true;
+        }
+
+        #endregion
+
+        #region Private Methods
 
         private async void FileQueueMonitoring()
         {
@@ -101,23 +128,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
                 brokeredMsg.Complete();
 
             } while (!stop);
-        }
-
-        public bool Start(HostControl hostControl)
-        {
-            workingThread.Start();
-            serviceStatusThread.Start();
-            timer.Start();
-            return true;
-        }
-
-        public bool Stop(HostControl hostControl)
-        {
-            stop = true;
-            workingThread.Join();
-            serviceStatusThread.Join();
-            return true;
-        }
+        }       
 
         private void SaveDocumentToFolder()
         {
@@ -147,5 +158,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
                 topicClient.Send(new BrokeredMessage(settings));
             }
         }
+
+        #endregion
     }
 }
