@@ -42,7 +42,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             return false;
         }
 
-        public static bool CheckBarCode(string file, BarcodeReader barcodeReader)
+        public static bool CheckBarCode(string file, BarcodeReader barcodeReader, string barcodeVal)
         {
             try
             {
@@ -53,7 +53,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                     result = barcodeReader.Decode(bmp);
                 }
 
-                return result != null && result.BarcodeFormat == BarcodeFormat.CODE_128 && result.Text == "Document Breaker";
+                return result != null && result.BarcodeFormat == BarcodeFormat.CODE_128 && result.Text == barcodeVal;
             }
             catch
             {

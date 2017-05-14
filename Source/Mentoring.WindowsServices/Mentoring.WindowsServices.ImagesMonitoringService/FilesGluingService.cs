@@ -8,9 +8,10 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Timers;
 using ZXing;
-using System.Drawing;
 using System.Diagnostics;
 using Topshelf;
+using Microsoft.ServiceBus.Messaging;
+using Mentoring.WindowsServices.Utils;
 
 namespace Mentoring.WindowsServices.ImagesMonitoringService
 {
@@ -20,17 +21,23 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
         FileSystemWatcher watcher;
         Thread workingThread;
+        Thread settingsThread;
 
         string inDir;
         string outSuccessDir;
         string outFailedDir;
+        string barcodeVal;
 
         ManualResetEvent workStop;
         AutoResetEvent newFile;
+        QueueClient queueClient;
+        TopicClient topicClient;
+        SubscriptionClient subscriptionClient;
 
         Document document;
         Section section;
         System.Timers.Timer timer;
+        System.Timers.Timer statusTimer;
 
         //acceptable formats
         string[] extensions = new string[] { ".png", ".jpg", ".jpeg" };
@@ -39,7 +46,9 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         List<string> processedImages;
         List<int> processedImagesNumeration;
         bool firstImage;
+        bool stop;
         BarcodeReader barcodeReader;
+        ServiceStatus serviceStatus;
 
         #endregion
 
@@ -62,16 +71,28 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             if (!Directory.Exists(outFailedDir))
                 Directory.CreateDirectory(outFailedDir);
 
+            stop = false;
             workingThread = new Thread(ImagesMonitoring);
+            settingsThread = new Thread(ServiceSettingsMonitoring);
             workStop = new ManualResetEvent(false);
             newFile = new AutoResetEvent(false);
 
             watcher = new FileSystemWatcher(inDir);
             watcher.Created += FileAppeared;
 
+            barcodeVal = "Document Breaker";
+            serviceStatus = new ServiceStatus { Status = ServiceStatusEnum.WaitingForNewFiles, Timeout = 15000, Barcode = barcodeVal };
+
             CreateNewDocument();
             timer = new System.Timers.Timer(15000);
             timer.Elapsed += OnTimedEvent;
+
+            statusTimer = new System.Timers.Timer(10000);
+            statusTimer.Elapsed += SendUpdatedStatusEvent;
+
+            queueClient = QueueClient.Create("FileQueue");
+            topicClient = TopicClient.Create("ServiceStatusTopic");
+            subscriptionClient = SubscriptionClient.Create("ServiceSettingsTopic", "ServiceSettingsSubscription");
 
             barcodeReader = new BarcodeReader { AutoRotate = true };
         }
@@ -79,15 +100,20 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         public bool Start(HostControl hostControl)
         {
             workingThread.Start();
+            settingsThread.Start();
             watcher.EnableRaisingEvents = true;
+            serviceStatus.Status = ServiceStatusEnum.WaitingForNewFiles;
+            statusTimer.Start();
             return true;
         }
 
         public bool Stop(HostControl hostControl)
         {
             watcher.EnableRaisingEvents = false;
+            stop = true;
             workStop.Set();
             workingThread.Join();
+            settingsThread.Join();
             return true;
         }
 
@@ -103,6 +129,8 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
                 foreach (var file in Directory.EnumerateFiles(inDir))
                 {
+                    serviceStatus.Status = ServiceStatusEnum.FileProcessing;
+
                     if (workStop.WaitOne(TimeSpan.Zero))
                         return;
 
@@ -115,11 +143,35 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
                 //timer for detecting if new document should be created
                 timer.Start();
+
+                serviceStatus.Status = ServiceStatusEnum.WaitingForNewFiles;
             }
             while (WaitHandle.WaitAny(new WaitHandle[] { workStop, newFile }) != 0);
 
+            serviceStatus.Status = ServiceStatusEnum.Stopping;
+
             //saving all processed images before stopping service
             SaveImagesToPdfDocument();
+        }
+
+        private async void ServiceSettingsMonitoring()
+        {
+            do
+            {
+                var brokeredMsg = await subscriptionClient.ReceiveAsync();
+                var settings = brokeredMsg.GetBody<Settings>();
+
+                if(settings.UpdateStatus)
+                {
+                    SendUpdatedStatus();
+                }
+
+                timer.Interval = settings.Timeout;
+                barcodeVal = settings.Barcode;
+
+                brokeredMsg.Complete();
+
+            } while (!stop);
         }
 
         private void CreateNewDocument()
@@ -143,7 +195,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                 {
                     var imgNumber = FileHelper.GetImageNumeration(file);
 
-                    var checkBarcode = FileHelper.CheckBarCode(file, barcodeReader);
+                    var checkBarcode = FileHelper.CheckBarCode(file, barcodeReader, barcodeVal);
 
                     //if numeration was broken or barcode was found - create new document
                     if ((processedImagesNumeration.Count() != 0 && processedImagesNumeration.Max() != (imgNumber - 1)) || checkBarcode)
@@ -194,6 +246,8 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
         private void SaveImagesToPdfDocument()
         {
+            serviceStatus.Status = ServiceStatusEnum.DocumentSending;
+
             if (processedImages != null && processedImages.Count() > 0)
             {
                 try
@@ -202,7 +256,21 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                     render.Document = document;
 
                     render.RenderDocument();
-                    render.Save(Path.Combine(outSuccessDir, Guid.NewGuid() + ".pdf"));
+                    var doc = render.PdfDocument;
+                    MemoryStream stream = new MemoryStream();
+                    doc.Save(stream);
+                    byte[] docBytes = stream.ToArray();
+
+                    var key = Guid.NewGuid();
+                    var messages = AzureHelper.ConstructAzureMessage(docBytes);
+                    IEnumerable<BrokeredMessage> brokeredMessages = messages
+                        .Select(msg => new BrokeredMessage(msg) { PartitionKey = key.ToString() });
+
+                    foreach (var msg in brokeredMessages)
+                    {
+                        queueClient.Send(msg);
+                    }
+
                 }
                 catch
                 {
@@ -212,6 +280,8 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                         MoveOrDeleteFile(file);
                     }
                 }
+
+                serviceStatus.Status = ServiceStatusEnum.DeletingFiles;
 
                 foreach (var img in processedImages)
                 {
@@ -224,8 +294,10 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             }
         }
 
-        private void MoveOrDeleteFile(string file) 
+        private void MoveOrDeleteFile(string file)
         {
+            serviceStatus.Status = ServiceStatusEnum.DeletingFiles;
+
             if (FileHelper.TryOpen(file, 3))
             {
                 if (!File.Exists(Path.Combine(outFailedDir, Path.GetFileName(file))))
@@ -243,6 +315,17 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         {
             //creating new document on timer event
             CreateNewDocument();
+        }
+
+        private void SendUpdatedStatusEvent(Object source, ElapsedEventArgs e)
+        {
+            SendUpdatedStatus();
+        }
+
+        private void SendUpdatedStatus()
+        {
+            var statusMsg = new BrokeredMessage(serviceStatus);
+            topicClient.Send(statusMsg);
         }
 
         private void FileAppeared(object sender, FileSystemEventArgs e)
