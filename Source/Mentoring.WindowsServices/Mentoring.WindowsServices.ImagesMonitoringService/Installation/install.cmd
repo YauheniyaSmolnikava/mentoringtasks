@@ -1,1 +1,1 @@
-﻿..\bin\Debug\Mentoring.WindowsServices.ImagesMonitoringService.exe install
+..\bin\Debug\Mentoring.WindowsServices.ImagesMonitoringService.exe install

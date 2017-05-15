@@ -1,0 +1,1 @@
+..\bin\Debug\Mentoring.WindowsServices.CentralizedResultsCollection.exe install

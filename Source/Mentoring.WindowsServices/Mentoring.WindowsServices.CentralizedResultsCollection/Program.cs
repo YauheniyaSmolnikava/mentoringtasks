@@ -12,8 +12,6 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
     {
         static void Main(string[] args)
         {
-           // SendBatch();
-
             HostFactory.Run(
                     serv =>
                     {
@@ -24,23 +22,6 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
                         serv.RunAsLocalService();
                     }
                 );
-            //SendBatch();
-        }
-
-        private static void SendBatch()
-        {
-            var client = QueueClient.Create("FileQueue");
-            byte[] bytes = System.IO.File.ReadAllBytes(@"D:\Smth\111.pdf");
-
-            var key = Guid.NewGuid();
-            var messages = AzureHelper.ConstructAzureMessage(bytes);
-            IEnumerable<BrokeredMessage> brokeredMessages = messages
-                .Select(msg => new BrokeredMessage(msg) { PartitionKey = key.ToString() });
-
-            foreach (var msg in brokeredMessages)
-            {
-                client.Send(msg);
-            }
         }
     }
 }
