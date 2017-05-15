@@ -48,7 +48,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             if (!Directory.Exists(outSuccessDir))
                 Directory.CreateDirectory(outSuccessDir);
 
-            settings = new Settings { UpdateStatus = false, Timeout = 10000, Barcode = "Document Breaker" };
+            settings = new Settings { UpdateStatus = false, Timeout = 15000, Barcode = "Document Breaker" };
             if (!File.Exists(Path.Combine(curDir, fileSettingsName)))
             {
                 using (StreamWriter sw = File.AppendText(Path.Combine(curDir, fileSettingsName)))
@@ -91,23 +91,27 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 
         private async void FileQueueMonitoring()
         {
+            //listening to new messages in queue
             do
             {
                 var brokeredMsg = await client.ReceiveAsync();
-                var azureMsg = brokeredMsg.GetBody<AzureMessage>();
-
-                if(azureMsg.SequenceNumber == 0 || messageParts == null)
+                if (brokeredMsg != null)
                 {
-                    messageParts = new AzureMessage[azureMsg.Amount];
-                }
+                    var azureMsg = brokeredMsg.GetBody<AzureMessage>();
 
-                messageParts[azureMsg.SequenceNumber] = azureMsg;
+                    if (azureMsg.SequenceNumber == 0 || messageParts == null)
+                    {
+                        messageParts = new AzureMessage[azureMsg.Amount];
+                    }
 
-                brokeredMsg.Complete();
+                    messageParts[azureMsg.SequenceNumber] = azureMsg;
 
-                if (azureMsg.SequenceNumber == azureMsg.Amount - 1)
-                {
-                    SaveDocumentToFolder();
+                    brokeredMsg.Complete();
+
+                    if (azureMsg.SequenceNumber == azureMsg.Amount - 1)
+                    {
+                        SaveDocumentToFolder();
+                    }
                 }
 
             } while (!stop);
@@ -115,6 +119,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 
         private async void ServiceStatusMonitoring()
         {
+            //listening to messages with service status and saving it to text file
             do
             {
                 var brokeredMsg = await subscriptionClient.ReceiveAsync();
@@ -132,6 +137,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 
         private void SaveDocumentToFolder()
         {
+            //constructing file from separated messages and saving it to pdf file
             byte[] documentBytes = messageParts[0].Body;
 
             for(int i = 1; i < messageParts.Length; i++)
@@ -144,6 +150,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
 
         private void FileMonitoring(Object source, ElapsedEventArgs e)
         {
+            //monitoring file with settings and sending updates to topic
             string fileSettingsStr = File.ReadAllText(Path.Combine(curDir, fileSettingsName));
             Settings fileSettingsObj = JsonConvert.DeserializeObject<Settings>(fileSettingsStr);
 

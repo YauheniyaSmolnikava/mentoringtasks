@@ -28,6 +28,11 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         string outFailedDir;
         string barcodeVal;
 
+        string queueName = "FileQueue";
+        string topicName = "ServiceStatusTopic";
+        string subscriptionName = "ServiceSettingsSubscription";
+        string subscriptionTopicName = "ServiceSettingsTopic";
+
         ManualResetEvent workStop;
         AutoResetEvent newFile;
         QueueClient queueClient;
@@ -90,9 +95,9 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             statusTimer = new System.Timers.Timer(10000);
             statusTimer.Elapsed += SendUpdatedStatusEvent;
 
-            queueClient = QueueClient.Create("FileQueue");
-            topicClient = TopicClient.Create("ServiceStatusTopic");
-            subscriptionClient = SubscriptionClient.Create("ServiceSettingsTopic", "ServiceSettingsSubscription");
+            queueClient = QueueClient.Create(queueName);
+            topicClient = TopicClient.Create(topicName);
+            subscriptionClient = SubscriptionClient.Create(subscriptionTopicName, subscriptionName);
 
             barcodeReader = new BarcodeReader { AutoRotate = true };
         }
@@ -151,25 +156,29 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             serviceStatus.Status = ServiceStatusEnum.Stopping;
 
             //saving all processed images before stopping service
-            SaveImagesToPdfDocument();
+            SaveImagesToPdfDocumentAndSendToQueue();
         }
 
         private async void ServiceSettingsMonitoring()
         {
+            // listen to messages from topic, changes in settings and applying this changes
             do
             {
                 var brokeredMsg = await subscriptionClient.ReceiveAsync();
-                var settings = brokeredMsg.GetBody<Settings>();
-
-                if(settings.UpdateStatus)
+                if (brokeredMsg != null)
                 {
-                    SendUpdatedStatus();
+                    var settings = brokeredMsg.GetBody<Settings>();
+
+                    if (settings.UpdateStatus)
+                    {
+                        SendUpdatedStatus();
+                    }
+
+                    timer.Interval = settings.Timeout;
+                    barcodeVal = settings.Barcode;
+
+                    brokeredMsg.Complete();
                 }
-
-                timer.Interval = settings.Timeout;
-                barcodeVal = settings.Barcode;
-
-                brokeredMsg.Complete();
 
             } while (!stop);
         }
@@ -177,7 +186,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         private void CreateNewDocument()
         {
             //saving processed images before new document creating
-            SaveImagesToPdfDocument();
+            SaveImagesToPdfDocumentAndSendToQueue();
             document = new Document();
             section = document.AddSection();
             processedImages = new List<string>();
@@ -244,7 +253,7 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
             }
         }
 
-        private void SaveImagesToPdfDocument()
+        private void SaveImagesToPdfDocumentAndSendToQueue()
         {
             serviceStatus.Status = ServiceStatusEnum.DocumentSending;
 
@@ -257,6 +266,8 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
                     render.RenderDocument();
                     var doc = render.PdfDocument;
+
+                    //obtaining bytes of prepared document and sending azure message to queue
                     MemoryStream stream = new MemoryStream();
                     doc.Save(stream);
                     byte[] docBytes = stream.ToArray();
@@ -270,7 +281,6 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
                     {
                         queueClient.Send(msg);
                     }
-
                 }
                 catch
                 {
@@ -324,6 +334,9 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
         private void SendUpdatedStatus()
         {
+            //sending current status to topic
+            serviceStatus.Timeout = (int)timer.Interval;
+            serviceStatus.Barcode = barcodeVal;
             var statusMsg = new BrokeredMessage(serviceStatus);
             topicClient.Send(statusMsg);
         }
