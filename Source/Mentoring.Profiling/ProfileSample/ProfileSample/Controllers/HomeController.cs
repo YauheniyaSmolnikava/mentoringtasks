@@ -9,12 +9,17 @@ namespace ProfileSample.Controllers
 {
     public class HomeController : Controller
     {
+        IRepository context;
+
+        public HomeController()
+        {
+            context = new ImagesRepository();
+        }
+
         [OutputCache(Duration = 120)]
         public ActionResult Index()
         {
-            var context = new ProfileSampleEntities();
-
-            var model = context.ImgSources.Take(20).Select(item => new ImageModel
+            var model = context.GetImages(20).Select(item => new ImageModel
             {
                 Id = item.Id,
                 Name = item.Name
@@ -26,9 +31,7 @@ namespace ProfileSample.Controllers
         [OutputCache(Duration = 120)]
         public ActionResult RenderImage(int id)
         {
-            var context = new ProfileSampleEntities();
-
-            var item = context.ImgSources.Find(id);
+            var item = context.GetImageById(id);
             byte[] photoBack;
 
             var ms = new MemoryStream(item.Data);
