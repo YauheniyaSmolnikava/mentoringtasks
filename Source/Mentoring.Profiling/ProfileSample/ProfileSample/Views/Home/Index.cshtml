@@ -1,0 +1,15 @@
+﻿@model List<ProfileSample.Models.ImageModel>
+
+@{
+    ViewBag.Title = "title";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        //receive image as file instead of converting bytes
+        <img src="@Url.Action("RenderImage", "Home", new {id = item.Id})" width="300" height="150" />
+        @*<img src="@Url.Action("RenderImage", new { id = item.Id})" />*@
+    }
+</div>
