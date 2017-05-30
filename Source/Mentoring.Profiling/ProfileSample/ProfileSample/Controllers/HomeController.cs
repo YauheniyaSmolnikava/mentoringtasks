@@ -1,17 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 using ProfileSample.DAL;
 using ProfileSample.Models;
+using System.Drawing;
 
 namespace ProfileSample.Controllers
 {
     public class HomeController : Controller
     {
+        [OutputCache(Duration = 120)]
         public ActionResult Index()
         {
             var context = new ProfileSampleEntities();
@@ -25,15 +23,26 @@ namespace ProfileSample.Controllers
             return View(model);
         }
 
+        [OutputCache(Duration = 120)]
         public ActionResult RenderImage(int id)
         {
             var context = new ProfileSampleEntities();
 
-            ImgSource item = context.ImgSources.Find(id);
+            var item = context.ImgSources.Find(id);
+            byte[] photoBack;
 
-            byte[] photoBack = item.Data;
+            var ms = new MemoryStream(item.Data);
+            var image = Image.FromStream(ms);
+            using (var resizedImg = new Bitmap(image, new Size(300, 150)))
+            {
+                using (var resizedImageMs = new MemoryStream())
+                {
+                    resizedImg.Save(resizedImageMs, System.Drawing.Imaging.ImageFormat.Jpeg);
+                    photoBack = resizedImageMs.ToArray();
+                }
+            }
 
-            return File(photoBack, "image/png");
+            return File(photoBack, "image/jpeg");
         }
 
         public ActionResult Convert()
