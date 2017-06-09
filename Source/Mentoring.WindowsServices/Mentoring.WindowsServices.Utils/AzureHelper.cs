@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.ServiceBus.Messaging;
+using Mentoring.WindowsServices.Logging;
+using Mentoring.WindowsServices.Utils.Interfaces;
 
 namespace Mentoring.WindowsServices.Utils
 {
-    public static class AzureHelper
+    public class AzureHelper : IAzureHelper
     {
         private const int msgBodySize = 100;
 
         private const int msgByteSize = 100 * 1024;
 
-        public static IEnumerable<AzureMessage> ConstructAzureMessage(byte[] file)
+        public IEnumerable<AzureMessage> ConstructAzureMessage(byte[] file)
         {
             var azureMessages = new List<AzureMessage>();
 

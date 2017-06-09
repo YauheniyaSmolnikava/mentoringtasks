@@ -8,6 +8,7 @@ using Mentoring.WindowsServices.Utils;
 using Microsoft.ServiceBus.Messaging;
 using Topshelf;
 using Newtonsoft.Json;
+using Mentoring.WindowsServices.Logging;
 
 namespace Mentoring.WindowsServices.CentralizedResultsCollection
 {
@@ -69,6 +70,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             timer.Elapsed += FileMonitoring;
         }
 
+        [LoggerPostSharpAspect]
         public bool Start(HostControl hostControl)
         {
             workingThread.Start();
@@ -77,6 +79,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             return true;
         }
 
+        [LoggerPostSharpAspect]
         public bool Stop(HostControl hostControl)
         {
             stop = true;
@@ -133,8 +136,9 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
                 brokeredMsg.Complete();
 
             } while (!stop);
-        }       
+        }
 
+        [LoggerPostSharpAspect]
         private void SaveDocumentToFolder()
         {
             //constructing file from separated messages and saving it to pdf file

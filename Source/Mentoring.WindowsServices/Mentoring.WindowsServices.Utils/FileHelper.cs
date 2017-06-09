@@ -2,13 +2,14 @@
 using System.IO;
 using System.Linq;
 using System.Threading;
+using Mentoring.WindowsServices.Utils.Interfaces;
 using ZXing;
 
 namespace Mentoring.WindowsServices.Utils
 {
-    public static class FileHelper
+    public class FileHelper : IFileHelper
     {
-        public static int GetImageNumeration(string file)
+        public int GetImageNumeration(string file)
         {
             var fileName = Path.GetFileNameWithoutExtension(file);
             var fileParts = fileName.Split(new[] { '_' });
@@ -22,7 +23,7 @@ namespace Mentoring.WindowsServices.Utils
             return -1;
         }
 
-        public static bool TryOpen(string fullPath, int v)
+        public bool TryOpen(string fullPath, int v)
         {
             for (int i = 0; i < v; i++)
             {
@@ -42,7 +43,7 @@ namespace Mentoring.WindowsServices.Utils
             return false;
         }
 
-        public static bool CheckBarCode(string file, BarcodeReader barcodeReader, string barcodeVal)
+        public bool CheckBarCode(string file, BarcodeReader barcodeReader, string barcodeVal)
         {
             try
             {

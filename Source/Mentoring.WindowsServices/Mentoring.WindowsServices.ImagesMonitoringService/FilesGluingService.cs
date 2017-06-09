@@ -12,6 +12,8 @@ using Topshelf;
 using Microsoft.ServiceBus.Messaging;
 using Mentoring.WindowsServices.Utils;
 using ZXing;
+using Mentoring.WindowsServices.Utils.Interfaces;
+using Mentoring.WindowsServices.CentralizedResultsCollection.IoC;
 
 namespace Mentoring.WindowsServices.ImagesMonitoringService
 {
@@ -55,6 +57,9 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
         BarcodeReader barcodeReader;
         ServiceStatus serviceStatus;
 
+        IAzureHelper AzureHelper;
+        IFileHelper FileHelper;
+
         #endregion
 
         #region Public Methods & Constructors
@@ -75,6 +80,11 @@ namespace Mentoring.WindowsServices.ImagesMonitoringService
 
             if (!Directory.Exists(outFailedDir))
                 Directory.CreateDirectory(outFailedDir);
+
+            DependencyResolver.Initialize();
+
+            AzureHelper = DependencyResolver.For<IAzureHelper>();
+            FileHelper = DependencyResolver.For<IFileHelper>();
 
             stop = false;
             workingThread = new Thread(ImagesMonitoring);
