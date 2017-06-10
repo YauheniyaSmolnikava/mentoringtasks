@@ -4,11 +4,12 @@ using System.IO;
 using System.Linq;
 using Newtonsoft.Json;
 using PostSharp.Aspects;
+using PostSharp.Serialization;
 
 namespace Mentoring.WindowsServices.Logging
 {
-    [Serializable]
-    public class LoggerPostSharpAspect : OnMethodBoundaryAspect
+    [PSerializable]
+    public class LoggerPostSharpAttribute : OnMethodBoundaryAspect
     {
         private LogInfo logInfo;
         private string log = "logPostSharp.txt";
@@ -28,7 +29,7 @@ namespace Mentoring.WindowsServices.Logging
             var curDir = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
             var filePath = Path.Combine(curDir, log);
 
-            logInfo.ReturnedValue = args.ReturnValue.ToString();
+            logInfo.ReturnedValue = args.ReturnValue != null ? args.ReturnValue.ToString() : string.Empty;
 
             using (StreamWriter sw = File.AppendText(filePath))
             {

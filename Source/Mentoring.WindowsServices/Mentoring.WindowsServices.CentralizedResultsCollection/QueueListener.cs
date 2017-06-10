@@ -70,7 +70,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             timer.Elapsed += FileMonitoring;
         }
 
-        [LoggerPostSharpAspect]
+        [LoggerPostSharp]
         public bool Start(HostControl hostControl)
         {
             workingThread.Start();
@@ -79,7 +79,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             return true;
         }
 
-        [LoggerPostSharpAspect]
+        [LoggerPostSharp]
         public bool Stop(HostControl hostControl)
         {
             stop = true;
@@ -138,7 +138,7 @@ namespace Mentoring.WindowsServices.CentralizedResultsCollection
             } while (!stop);
         }
 
-        [LoggerPostSharpAspect]
+        [LoggerPostSharp]
         private void SaveDocumentToFolder()
         {
             //constructing file from separated messages and saving it to pdf file
